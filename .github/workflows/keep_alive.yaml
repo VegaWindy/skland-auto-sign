@@ -1,0 +1,41 @@
+name: Repository Keep-Alive
+
+on:
+  schedule:
+    # 每 30 天运行一次（留有充足余量）
+    - cron: '0 0 */30 * *'
+  # 允许手动触发
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Check last activity
+        id: check_date
+        run: |
+          # 获取最后一次提交的时间
+          LAST_COMMIT_DATE=$(git log -1 --format=%cd --date=unix)
+          CURRENT_DATE=$(date +%s)
+          DAYS_SINCE_LAST_COMMIT=$(( ($CURRENT_DATE - $LAST_COMMIT_DATE) / 86400 ))
+          
+          echo "Last commit was $DAYS_SINCE_LAST_COMMIT days ago"
+          echo "days_ago=$DAYS_SINCE_LAST_COMMIT" >> $GITHUB_OUTPUT
+          
+      - name: Create keep-alive commit (if needed)
+        if: steps.check_date.outputs.days_ago > 45
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --allow-empty -m "🔵 Keep-alive commit to maintain repository activity"
+          git push
+        env:
+          GIT_AUTHOR_NAME: "github-actions[bot]"
+          GIT_AUTHOR_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
+          GIT_COMMITTER_NAME: "github-actions[bot]"
+          GIT_COMMITTER_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"

@@ -28,7 +28,7 @@ jobs:
           echo "days_ago=$DAYS_SINCE_LAST_COMMIT" >> $GITHUB_OUTPUT
           
       - name: Create keep-alive commit (if needed)
-        if: steps.check_date.outputs.days_ago > 45
+        if: steps.check_date.outputs.days_ago > 44
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
